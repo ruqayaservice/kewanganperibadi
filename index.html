@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="ms" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kewangan Peribadi</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: #0f172a; }
+
+    .glass {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glass-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+    }
+    .income-badge { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+    .expense-badge { background: rgba(251,113,133,0.15); color: #fb7185; border: 1px solid rgba(251,113,133,0.25); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(99,102,241,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.5); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .login-bg {
+      background: radial-gradient(ellipse at 30% 40%, rgba(99,102,241,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 70%, rgba(139,92,246,0.15) 0%, transparent 60%),
+                  #0f172a;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+    input, select, textarea {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(255,255,255,0.12) !important;
+      color: #e2e8f0 !important;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(99,102,241,0.6) !important;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    input::placeholder, textarea::placeholder { color: rgba(148,163,184,0.5) !important; }
+    select option { background: #1e293b; color: #e2e8f0; }
+
+    .stat-card {
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+    .balance-card { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+    .balance-card::before { background: white; }
+    .income-card { background: linear-gradient(135deg, #065f46 0%, #059669 100%); }
+    .income-card::before { background: #34d399; }
+    .expense-card { background: linear-gradient(135deg, #9f1239 0%, #e11d48 100%); }
+    .expense-card::before { background: #fb7185; }
+
+    .tab-active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+    .tab-inactive {
+      color: #94a3b8;
+    }
+    .tab-inactive:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+
+    .delete-btn { opacity: 0; transition: opacity 0.2s; }
+    .transaction-row:hover .delete-btn { opacity: 1; }
+
+    .confirm-delete { display: none; }
+    .confirm-delete.show { display: flex; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease forwards; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      transform: translateY(100px);
+      transition: transform 0.3s ease;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); }
+    .toast-success { background: linear-gradient(135deg, #059669, #10b981); }
+    .toast-error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+    .report-btn.active-report {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+      color: white !important;
+    }
+    .report-btn {
+      cursor: pointer;
+    }
+
+    .suggestion-box {
+      background: linear-gradient(135deg, rgba(251,113,133,0.1), rgba(251,113,133,0.05));
+      border: 1px solid rgba(251,113,133,0.2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .suggestion-item {
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border-left: 3px solid #fb7185;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .category-bar {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+    .category-bar-name {
+      flex: 0 0 140px;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .category-bar-amount {
+      flex: 0 0 100px;
+      text-align: right;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .category-bar-visual {
+      flex: 1;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      margin: 0 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .category-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full text-slate-200"><!-- Toast -->
+  <div id="toast" class="toast"></div><!-- LOGIN SCREEN -->
+  <div id="login-screen" class="login-bg fixed inset-0 flex items-center justify-center z-50">
+   <div class="glass-card p-8 w-full max-w-sm mx-4 slide-in">
+    <div class="text-center mb-8">
+     <div class="w-16 h-16 rounded-2xl btn-primary flex items-center justify-center mx-auto mb-4"><i data-lucide="wallet" style="width:32px;height:32px;color:white;"></i>
+     </div>
+     <h1 id="login-title" class="text-2xl font-bold text-white">Kewangan Peribadi</h1>
+     <p class="text-slate-400 text-sm mt-1">Sila log masuk untuk teruskan</p>
+    </div>
+    <form id="login-form" onsubmit="handleLogin(event)">
+     <div class="mb-4"><label for="username-input" class="block text-sm font-medium text-slate-300 mb-2">Nama Pengguna</label> <input id="username-input" type="text" placeholder="Masukkan nama pengguna" class="w-full px-4 py-3 text-sm" autocomplete="username">
+     </div>
+     <div class="mb-6"><label for="password-input" class="block text-sm font-medium text-slate-300 mb-2">Kata Laluan</label> <input id="password-input" type="password" placeholder="Masukkan kata laluan" class="w-full px-4 py-3 text-sm" autocomplete="current-password">
+     </div>
+     <div id="login-error" class="hidden mb-4 text-rose-400 text-sm text-center bg-rose-400/10 rounded-lg py-2 px-3">
+      Nama pengguna atau kata laluan salah.
+     </div><button type="submit" class="btn-primary w-full py-3 rounded-xl text-white font-semibold text-sm"> Log Masuk </button>
+    </form>
+   </div>
+  </div><!-- MAIN APP -->
+  <div id="main-app" class="hidden h-full flex flex-col" style="min-height:100%;background:radial-gradient(ellipse at 20% 10%, rgba(99,102,241,0.12) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.10) 0%, transparent 50%), #0f172a;"><!-- Header -->
+   <header class="glass border-b border-white/10 px-6 py-4 flex items-center justify-between flex-shrink-0" style="border-radius:0;">
+    <div class="flex items-center gap-3">
+     <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center"><i data-lucide="wallet" style="width:18px;height:18px;color:white;"></i>
+     </div>
+     <h1 id="app-title-header" class="text-lg font-bold text-white">Kewangan Peribadi</h1>
+    </div>
+    <div class="flex items-center gap-3">
+     <div class="flex items-center gap-2 text-slate-400 text-sm"><i data-lucide="user-circle" style="width:18px;height:18px;"></i> <span>saya</span>
+     </div><button onclick="handleLogout()" class="flex items-center gap-2 text-slate-400 hover:text-rose-400 text-sm transition-colors px-3 py-2 rounded-lg hover:bg-rose-400/10"> <i data-lucide="log-out" style="width:16px;height:16px;"></i> <span>Log Keluar</span> </button>
+    </div>
+   </header><!-- Content -->
+   <main class="flex-1 overflow-auto scrollbar-thin px-4 py-6 md:px-6" style="overflow-y:auto;">
+    <div class="max-w-6xl mx-auto"><!-- Stats Row -->
+     <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="stat-card balance-card text-white">
+       <p class="text-indigo-200 text-xs font-semibold uppercase tracking-wider mb-1">Baki Semasa</p>
+       <p id="stat-balance" class="text-2xl font-bold">RM 0.00</p>
+       <div class="absolute bottom-3 right-3 opacity-20"><i data-lucide="trending-up" style="width:36px;height:36px;"></i>
+       </div>
+      </div>
+      <div class="stat-card income-card text-white">
+       <p class="text-emerald-200 text-xs font-semibold uppercase tracking-wider mb-1">Jumlah Masuk</p>
+       <p id="stat-income" class="text-2xl font-bold">RM 0.00</p>
+       <div class="absolute bottom-3 right-3 opacity-20"><i data-lucide="arrow-down-circle" style="width:36px;height:36px;"></i>
+       </div>
+      </div>
+      <div class="stat-card expense-card text-white">
+       <p class="text-rose-200 text-xs font-semibold uppercase tracking-wider mb-1">Jumlah Keluar</p>
+       <p id="stat-expense" class="text-2xl font-bold">RM 0.00</p>
+       <div class="absolute bottom-3 right-3 opacity-20"><i data-lucide="arrow-up-circle" style="width:36px;height:36px;"></i>
+       </div>
+      </div>
+     </div><!-- Main Grid --> <!-- Reports Section -->
+     <div class="mb-6">
+      <div class="glass-card p-5">
+       <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2"><i data-lucide="bar-chart-3" style="width:18px;height:18px;color:#818cf8;"></i> Laporan Kewangan</h2>
+       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        <button onclick="showReport('daily')" id="btn-daily" class="report-btn px-4 py-2.5 rounded-lg text-sm font-semibold transition-all active-report" style="background:linear-gradient(135deg, #6366f1, #8b5cf6); color:white;">📅 Harian</button> <button onclick="showReport('weekly')" id="btn-weekly" class="report-btn px-4 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background:rgba(255,255,255,0.05); color:#94a3b8;">📊 Mingguan</button> <button onclick="showReport('monthly')" id="btn-monthly" class="report-btn px-4 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background:rgba(255,255,255,0.05); color:#94a3b8;">📈 Bulanan</button> <button onclick="showReport('yearly')" id="btn-yearly" class="report-btn px-4 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background:rgba(255,255,255,0.05); color:#94a3b8;">📉 Tahunan</button>
+       </div>
+       <div id="report-container" class="space-y-3">
+        <div class="text-center py-8 text-slate-500 text-sm">
+         Pilih tempoh untuk melihat laporan
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6"><!-- Add Transaction Form -->
+      <div class="lg:col-span-2">
+       <div class="glass-card p-5">
+        <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2"><i data-lucide="plus-circle" style="width:18px;height:18px;color:#818cf8;"></i> Tambah Transaksi</h2>
+        <form id="txn-form" onsubmit="handleAddTransaction(event)"><!-- Type Tabs -->
+         <div class="flex gap-2 mb-4 bg-white/5 rounded-xl p-1"><button type="button" id="tab-income" onclick="setType('income')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all tab-active"> 💰 Masuk </button> <button type="button" id="tab-expense" onclick="setType('expense')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all tab-inactive"> 💸 Keluar </button>
+         </div>
+         <div class="space-y-3">
+          <div><label for="txn-amount" class="block text-xs font-medium text-slate-400 mb-1">Jumlah (RM)</label> <input id="txn-amount" type="number" step="0.01" min="0.01" placeholder="0.00" class="w-full px-3 py-2.5 text-sm" required>
+          </div>
+          <div><label for="txn-category" class="block text-xs font-medium text-slate-400 mb-1">Kategori</label> <select id="txn-category" class="w-full px-3 py-2.5 text-sm"> <option value="Gaji">💼 Gaji</option> <option value="Perniagaan">🏪 Perniagaan</option> <option value="Pelaburan">📈 Pelaburan</option> <option value="Hadiah">🎁 Hadiah</option> <option value="Lain-lain Masuk">➕ Lain-lain Masuk</option> <option value="Makanan">🍽️ Makanan</option> <option value="Pengangkutan">🚗 Pengangkutan</option> <option value="Utiliti">💡 Utiliti</option> <option value="Kesihatan">🏥 Kesihatan</option> <option value="Hiburan">🎮 Hiburan</option> <option value="Pendidikan">📚 Pendidikan</option> <option value="Pakaian">👗 Pakaian</option> <option value="Lain-lain Keluar">➖ Lain-lain Keluar</option> </select>
+          </div>
+          <div><label for="txn-desc" class="block text-xs font-medium text-slate-400 mb-1">Penerangan</label> <input id="txn-desc" type="text" placeholder="Contoh: Gaji bulan Januari" class="w-full px-3 py-2.5 text-sm" required>
+          </div>
+          <div><label for="txn-date" class="block text-xs font-medium text-slate-400 mb-1">Tarikh</label> <input id="txn-date" type="date" class="w-full px-3 py-2.5 text-sm" required>
+          </div>
+          <div><label for="txn-payment" class="block text-xs font-medium text-slate-400 mb-1">Kaedah Bayaran</label> <select id="txn-payment" class="w-full px-3 py-2.5 text-sm"> <option value="Bank">🏦 Bank</option> <option value="Tunai">💵 Tunai</option> <option value="E-Wallet">📱 E-Wallet</option> </select>
+          </div>
+          <div><label for="txn-notes" class="block text-xs font-medium text-slate-400 mb-1">Catatan (pilihan)</label> <textarea id="txn-notes" rows="2" placeholder="Tulis catatan tambahan di sini..." class="w-full px-3 py-2.5 text-sm resize-none"></textarea>
+          </div>
+         </div><button type="submit" id="submit-btn" class="btn-primary w-full mt-4 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2"> <i data-lucide="plus" style="width:16px;height:16px;"></i> <span id="submit-label">Tambah Transaksi</span> </button>
+        </form>
+       </div>
+      </div><!-- Transactions List -->
+      <div class="lg:col-span-3">
+       <div class="glass-card p-5 h-full flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+         <h2 class="text-base font-bold text-white flex items-center gap-2"><i data-lucide="list" style="width:18px;height:18px;color:#818cf8;"></i> Senarai Transaksi</h2>
+         <div class="flex items-center gap-2"><select id="filter-type" onchange="applyFilter()" class="px-3 py-1.5 text-xs rounded-lg"> <option value="all">Semua</option> <option value="income">Masuk</option> <option value="expense">Keluar</option> </select>
+         </div>
+        </div><!-- Limit warning -->
+        <div id="limit-warning" class="hidden mb-3 text-amber-400 text-xs text-center bg-amber-400/10 rounded-lg py-2 px-3 border border-amber-400/20">
+         ⚠️ Had 999 transaksi telah dicapai. Sila padam beberapa untuk menambah yang baru.
+        </div>
+        <div id="txn-list" class="flex-1 overflow-auto scrollbar-thin space-y-2" style="max-height:460px; overflow-y:auto;">
+         <div id="empty-state" class="flex flex-col items-center justify-center py-12 text-center">
+          <div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-3"><i data-lucide="inbox" style="width:28px;height:28px;color:#475569;"></i>
+          </div>
+          <p class="text-slate-500 text-sm">Tiada transaksi lagi</p>
+          <p class="text-slate-600 text-xs mt-1">Tambah transaksi pertama anda!</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </main>
+  </div>
+  <script>
+    // ─── STATE ───────────────────────────────────────────────
+    let allTransactions = [];
+    let currentType = 'income';
+    let currentCurrency = 'RM';
+    let isLoggedIn = false;
+    let deleteConfirmId = null;
+
+    // ─── CREDENTIALS ─────────────────────────────────────────
+    const CRED = { username: 'saya', password: 'saya' };
+
+    // ─── LOGIN ───────────────────────────────────────────────
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('username-input').value.trim();
+      const p = document.getElementById('password-input').value;
+      const err = document.getElementById('login-error');
+      if (u === CRED.username && p === CRED.password) {
+        err.classList.add('hidden');
+        isLoggedIn = true;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').classList.remove('hidden');
+        lucide.createIcons();
+      } else {
+        err.classList.remove('hidden');
+        document.getElementById('password-input').value = '';
+      }
+    }
+
+    function handleLogout() {
+      isLoggedIn = false;
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('main-app').classList.add('hidden');
+      document.getElementById('username-input').value = '';
+      document.getElementById('password-input').value = '';
+      lucide.createIcons();
+    }
+
+    // ─── TYPE TABS ───────────────────────────────────────────
+    function setType(type) {
+      currentType = type;
+      const incomeTab = document.getElementById('tab-income');
+      const expenseTab = document.getElementById('tab-expense');
+      const cat = document.getElementById('txn-category');
+
+      if (type === 'income') {
+        incomeTab.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-all tab-active';
+        expenseTab.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-all tab-inactive';
+        // Show income categories
+        cat.innerHTML = `
+          <option value="Gaji">💼 Gaji</option>
+          <option value="Perniagaan">🏪 Perniagaan</option>
+          <option value="Pelaburan">📈 Pelaburan</option>
+          <option value="Hadiah">🎁 Hadiah</option>
+          <option value="Pinjaman">🔗 Pinjaman</option>
+          <option value="Arrahnu">💍 Arrahnu</option>
+          <option value="Lain-lain">➕ Lain-lain</option>`;
+      } else {
+        expenseTab.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-all tab-active';
+        incomeTab.className = 'flex-1 py-2 rounded-lg text-sm font-semibold transition-all tab-inactive';
+        // Show expense categories
+        cat.innerHTML = `
+          <option value="Makanan">🍽️ Makanan</option>
+          <option value="Pengangkutan">🚗 Pengangkutan</option>
+          <option value="Utiliti">💡 Utiliti</option>
+          <option value="Kesihatan">🏥 Kesihatan</option>
+          <option value="Hiburan">🎮 Hiburan</option>
+          <option value="Pendidikan">📚 Pendidikan</option>
+          <option value="Pakaian">👗 Pakaian</option>
+          <option value="Bayar Pinjaman">🔗 Bayar Pinjaman</option>
+          <option value="Bayar Arrahnu">💍 Bayar Arrahnu</option>
+          <option value="Lain-lain">➖ Lain-lain</option>`;
+      }
+    }
+
+    // ─── ADD TRANSACTION ─────────────────────────────────────
+    async function handleAddTransaction(e) {
+      e.preventDefault();
+      if (allTransactions.length >= 999) {
+        document.getElementById('limit-warning').classList.remove('hidden');
+        return;
+      }
+
+      const btn = document.getElementById('submit-btn');
+      const label = document.getElementById('submit-label');
+      btn.disabled = true;
+      label.textContent = 'Menyimpan...';
+
+      const data = {
+        type: currentType,
+        amount: parseFloat(document.getElementById('txn-amount').value),
+        category: document.getElementById('txn-category').value,
+        description: document.getElementById('txn-desc').value.trim(),
+        date: document.getElementById('txn-date').value,
+        payment_method: document.getElementById('txn-payment').value,
+        notes: document.getElementById('txn-notes').value.trim()
+      };
+
+      const result = await window.dataSdk.create(data);
+      btn.disabled = false;
+      label.textContent = 'Tambah Transaksi';
+
+      if (result.isOk) {
+        document.getElementById('txn-form').reset();
+        setType('income'); // reset tabs
+        document.getElementById('txn-date').valueAsDate = new Date();
+        showToast('Transaksi berjaya ditambah! ✅', 'success');
+      } else {
+        showToast('Ralat: Gagal menyimpan transaksi.', 'error');
+      }
+    }
+
+    // ─── DELETE ──────────────────────────────────────────────
+    async function confirmDelete(id) {
+      const row = document.querySelector(`[data-txn-id="${id}"]`);
+      if (!row) return;
+      const confirmDiv = row.querySelector('.confirm-delete');
+      const deleteBtn = row.querySelector('.delete-btn');
+      if (confirmDiv) { confirmDiv.classList.add('show'); }
+      if (deleteBtn) { deleteBtn.style.opacity = '0'; deleteBtn.style.pointerEvents = 'none'; }
+    }
+
+    function cancelDelete(id) {
+      const row = document.querySelector(`[data-txn-id="${id}"]`);
+      if (!row) return;
+      const confirmDiv = row.querySelector('.confirm-delete');
+      const deleteBtn = row.querySelector('.delete-btn');
+      if (confirmDiv) { confirmDiv.classList.remove('show'); }
+      if (deleteBtn) { deleteBtn.style.opacity = ''; deleteBtn.style.pointerEvents = ''; }
+    }
+
+    async function doDelete(id) {
+      const txn = allTransactions.find(t => t.__backendId === id);
+      if (!txn) return;
+      const row = document.querySelector(`[data-txn-id="${id}"]`);
+      if (row) { row.style.opacity = '0.5'; row.style.pointerEvents = 'none'; }
+      const result = await window.dataSdk.delete(txn);
+      if (result.isOk) {
+        showToast('Transaksi berjaya dipadam! 🗑️', 'success');
+      } else {
+        if (row) { row.style.opacity = ''; row.style.pointerEvents = ''; }
+        cancelDelete(id);
+        showToast('Ralat: Gagal memadam transaksi.', 'error');
+      }
+    }
+
+    // ─── FILTER ──────────────────────────────────────────────
+    function applyFilter() {
+      renderTransactions(allTransactions);
+    }
+
+    // ─── RENDER ──────────────────────────────────────────────
+    function renderTransactions(data) {
+      const filter = document.getElementById('filter-type')?.value || 'all';
+      const filtered = filter === 'all' ? data : data.filter(t => t.type === filter);
+      const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      const container = document.getElementById('txn-list');
+      const empty = document.getElementById('empty-state');
+
+      if (sorted.length === 0) {
+        // Remove all transaction rows
+        container.querySelectorAll('.transaction-row').forEach(el => el.remove());
+        if (empty) empty.style.display = 'flex';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+
+      // Selective update
+      const existing = new Map();
+      container.querySelectorAll('.transaction-row').forEach(el => {
+        existing.set(el.dataset.txnId, el);
+      });
+
+      const ids = new Set(sorted.map(t => t.__backendId));
+      // Remove rows no longer in filtered
+      existing.forEach((el, id) => { if (!ids.has(id)) el.remove(); });
+
+      sorted.forEach((txn, index) => {
+        const el = existing.get(txn.__backendId);
+        if (el) {
+          // Update in place (minimal)
+          updateTransactionElement(el, txn);
+        } else {
+          const newEl = createTransactionElement(txn);
+          // Insert at correct position
+          const allRows = container.querySelectorAll('.transaction-row');
+          if (index < allRows.length) {
+            container.insertBefore(newEl, allRows[index]);
+          } else {
+            container.appendChild(newEl);
+          }
+        }
+      });
+
+      lucide.createIcons();
+    }
+
+    function createTransactionElement(txn) {
+      const div = document.createElement('div');
+      div.className = 'transaction-row glass-card p-3 flex items-start gap-3 slide-in relative';
+      div.dataset.txnId = txn.__backendId;
+      div.style.borderRadius = '12px';
+      div.innerHTML = buildTransactionHTML(txn);
+      return div;
+    }
+
+    function updateTransactionElement(el, txn) {
+      el.innerHTML = buildTransactionHTML(txn);
+    }
+
+    function buildTransactionHTML(txn) {
+      const isIncome = txn.type === 'income';
+      const sign = isIncome ? '+' : '-';
+      const color = isIncome ? '#34d399' : '#fb7185';
+      const badgeClass = isIncome ? 'income-badge' : 'expense-badge';
+      const icon = isIncome ? 'arrow-down-circle' : 'arrow-up-circle';
+      const formattedDate = txn.date ? new Date(txn.date + 'T00:00:00').toLocaleDateString('ms-MY', { day:'2-digit', month:'short', year:'numeric' }) : '-';
+      const amount = typeof txn.amount === 'number' ? txn.amount.toFixed(2) : '0.00';
+
+      return `
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:${isIncome ? 'rgba(52,211,153,0.15)' : 'rgba(251,113,133,0.15)'};">
+          <i data-lucide="${icon}" style="width:18px;height:18px;color:${color};"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="text-sm font-semibold text-white truncate">${escHtml(txn.description)}</p>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}">${escHtml(txn.category)}</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">${formattedDate} • ${escHtml(txn.payment_method || 'Bank')}</p>
+          ${txn.notes ? `<p class="text-xs text-slate-400 mt-1 italic">"${escHtml(txn.notes)}"</p>` : ''}
+        </div>
+        <div class="flex flex-col items-end gap-1 flex-shrink-0">
+          <span class="text-sm font-bold" style="color:${color};">${sign}${currentCurrency} ${amount}</span>
+          <div class="flex items-center gap-1">
+            <button onclick="confirmDelete('${txn.__backendId}')" class="delete-btn p-1 rounded-lg hover:bg-rose-500/20 transition-colors" title="Padam">
+              <i data-lucide="trash-2" style="width:14px;height:14px;color:#fb7185;"></i>
+            </button>
+          </div>
+        </div>
+        <div class="confirm-delete absolute inset-0 rounded-xl items-center justify-center gap-2" style="background:rgba(15,23,42,0.92);border-radius:12px;">
+          <span class="text-xs text-slate-300">Padam transaksi ini?</span>
+          <button onclick="doDelete('${txn.__backendId}')" class="px-3 py-1 rounded-lg text-xs font-semibold text-white" style="background:#e11d48;">Ya, Padam</button>
+          <button onclick="cancelDelete('${txn.__backendId}')" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-300" style="background:rgba(255,255,255,0.1);">Batal</button>
+        </div>
+      `;
+    }
+
+    function updateStats(data) {
+      let totalIncome = 0, totalExpense = 0;
+      data.forEach(t => {
+        if (t.type === 'income') totalIncome += (t.amount || 0);
+        else totalExpense += (t.amount || 0);
+      });
+      const balance = totalIncome - totalExpense;
+      document.getElementById('stat-balance').textContent = `${currentCurrency} ${balance.toFixed(2)}`;
+      document.getElementById('stat-income').textContent = `${currentCurrency} ${totalIncome.toFixed(2)}`;
+      document.getElementById('stat-expense').textContent = `${currentCurrency} ${totalExpense.toFixed(2)}`;
+    }
+
+    // ─── UTILS ───────────────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showToast(msg, type='success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast toast-${type} show`;
+      setTimeout(() => { t.classList.remove('show'); }, 3000);
+    }
+
+    // ─── DATE HELPERS ───────────────────────────────────────
+    function getDateRange(type) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      const date = today.getDate();
+
+      if (type === 'daily') {
+        const start = new Date(year, month, date);
+        const end = new Date(year, month, date, 23, 59, 59);
+        return { start, end, label: today.toLocaleDateString('ms-MY', { day:'2-digit', month:'long', year:'numeric' }) };
+      }
+      if (type === 'weekly') {
+        const day = today.getDay();
+        const start = new Date(year, month, date - day);
+        const end = new Date(year, month, date - day + 6, 23, 59, 59);
+        return { start, end, label: `Minggu ${start.toLocaleDateString('ms-MY', { day:'2-digit', month:'short' })} - ${end.toLocaleDateString('ms-MY', { day:'2-digit', month:'short', year:'numeric' })}` };
+      }
+      if (type === 'monthly') {
+        const start = new Date(year, month, 1);
+        const end = new Date(year, month + 1, 0, 23, 59, 59);
+        return { start, end, label: today.toLocaleDateString('ms-MY', { month:'long', year:'numeric' }) };
+      }
+      if (type === 'yearly') {
+        const start = new Date(year, 0, 1);
+        const end = new Date(year, 11, 31, 23, 59, 59);
+        return { start, end, label: year.toString() };
+      }
+    }
+
+    function filterTransactionsByRange(data, range) {
+      return data.filter(t => {
+        const txnDate = new Date(t.date + 'T00:00:00');
+        return txnDate >= range.start && txnDate <= range.end;
+      });
+    }
+
+    // ─── REPORTS ────────────────────────────────────────────
+    function showReport(type) {
+      // Update buttons
+      document.querySelectorAll('.report-btn').forEach(btn => {
+        btn.classList.remove('active-report');
+        btn.style.background = 'rgba(255,255,255,0.05)';
+        btn.style.color = '#94a3b8';
+      });
+      const activeBtn = document.getElementById(`btn-${type}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active-report');
+        activeBtn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+        activeBtn.style.color = 'white';
+      }
+
+      const range = getDateRange(type);
+      const filtered = filterTransactionsByRange(allTransactions, range);
+      const incomeData = filtered.filter(t => t.type === 'income');
+      const expenseData = filtered.filter(t => t.type === 'expense');
+
+      let totalIncome = 0, totalExpense = 0;
+      incomeData.forEach(t => totalIncome += (t.amount || 0));
+      expenseData.forEach(t => totalExpense += (t.amount || 0));
+      const balance = totalIncome - totalExpense;
+
+      // Group by category
+      const incomeCat = {}, expenseCat = {};
+      incomeData.forEach(t => {
+        const cat = t.category || 'Lain-lain';
+        incomeCat[cat] = (incomeCat[cat] || 0) + (t.amount || 0);
+      });
+      expenseData.forEach(t => {
+        const cat = t.category || 'Lain-lain';
+        expenseCat[cat] = (expenseCat[cat] || 0) + (t.amount || 0);
+      });
+
+      const html = `
+        <div class="space-y-4">
+          <div class="text-xs text-slate-400 px-3 py-1">${range.label}</div>
+          
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="stat-card balance-card text-white p-3">
+              <p class="text-indigo-200 text-xs font-semibold mb-1">Baki Bersih</p>
+              <p class="text-xl font-bold">${currentCurrency} ${Math.abs(balance).toFixed(2)}</p>
+              <p class="text-xs mt-1" style="color:${balance < 0 ? '#fb7185' : '#34d399'};">${balance < 0 ? '🔴 Defisit' : '🟢 Surplus'}</p>
+            </div>
+            <div class="stat-card income-card text-white p-3">
+              <p class="text-emerald-200 text-xs font-semibold mb-1">Jumlah Masuk</p>
+              <p class="text-xl font-bold">${currentCurrency} ${totalIncome.toFixed(2)}</p>
+            </div>
+            <div class="stat-card expense-card text-white p-3">
+              <p class="text-rose-200 text-xs font-semibold mb-1">Jumlah Keluar</p>
+              <p class="text-xl font-bold">${currentCurrency} ${totalExpense.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <!-- Income Breakdown -->
+          ${Object.keys(incomeCat).length > 0 ? `
+            <div>
+              <p class="text-xs font-semibold text-emerald-400 mb-2">📥 Pecahan Masuk</p>
+              <div style="max-height:150px;overflow-y:auto;">
+                ${Object.entries(incomeCat).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => {
+                  const pct = totalIncome > 0 ? (amt / totalIncome * 100) : 0;
+                  return `
+                    <div class="category-bar">
+                      <div class="category-bar-name">${escHtml(cat)}</div>
+                      <div class="category-bar-visual">
+                        <div class="category-bar-fill" style="width:${pct}%;background:linear-gradient(90deg, #10b981, #34d399);"></div>
+                      </div>
+                      <div class="category-bar-amount" style="color:#34d399;">${currentCurrency} ${amt.toFixed(2)}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Expense Breakdown -->
+          ${Object.keys(expenseCat).length > 0 ? `
+            <div>
+              <p class="text-xs font-semibold text-rose-400 mb-2">📤 Pecahan Keluar</p>
+              <div style="max-height:150px;overflow-y:auto;">
+                ${Object.entries(expenseCat).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => {
+                  const pct = totalExpense > 0 ? (amt / totalExpense * 100) : 0;
+                  return `
+                    <div class="category-bar">
+                      <div class="category-bar-name">${escHtml(cat)}</div>
+                      <div class="category-bar-visual">
+                        <div class="category-bar-fill" style="width:${pct}%;background:linear-gradient(90deg, #f43f5e, #fb7185);"></div>
+                      </div>
+                      <div class="category-bar-amount" style="color:#fb7185;">${currentCurrency} ${amt.toFixed(2)}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Suggestions for Deficit -->
+          ${balance < 0 ? generateDeficitSuggestions(expenseCat, totalExpense, totalIncome) : ''}
+        </div>
+      `;
+
+      document.getElementById('report-container').innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function generateDeficitSuggestions(expenseCat, totalExpense, totalIncome) {
+      const sorted = Object.entries(expenseCat).sort((a, b) => b[1] - a[1]);
+      const topCategories = sorted.slice(0, 3);
+      
+      const suggestions = [];
+      
+      // Top spending categories
+      topCategories.forEach(([cat, amt]) => {
+        const pct = ((amt / totalExpense) * 100).toFixed(1);
+        const reduction = (amt * 0.1).toFixed(2);
+        suggestions.push(`<div class="suggestion-item">
+          <p class="text-xs font-semibold text-slate-300 mb-1">📊 ${escHtml(cat)}</p>
+          <p class="text-xs text-slate-400">Anda membelanjakan <span style="color:#fb7185;font-weight:600;">${pct}%</span> daripada perbelanjaan untuk kategori ini. Jika mengurangkan sebanyak 10%, anda akan hemat <span style="color:#34d399;font-weight:600;">${currentCurrency} ${reduction}</span>.</p>
+        </div>`);
+      });
+
+      const deficit = totalIncome - totalExpense;
+      const deficitAmt = Math.abs(deficit).toFixed(2);
+      suggestions.push(`<div class="suggestion-item">
+        <p class="text-xs font-semibold text-slate-300 mb-1">💡 Cadangan Utama</p>
+        <p class="text-xs text-slate-400">Anda menghadapi defisit <span style="color:#fb7185;font-weight:600;">${currentCurrency} ${deficitAmt}</span>. Pertimbangkan untuk: (1) Meningkatkan pendapatan, (2) Mengurangkan perbelanjaan tidak penting, atau (3) Membuat belanjawan yang lebih ketat.</p>
+      </div>`);
+
+      return `
+        <div class="suggestion-box">
+          <p class="text-sm font-bold text-rose-300 mb-3 flex items-center gap-2">
+            <i data-lucide="alert-circle" style="width:16px;height:16px;"></i>
+            Amaran Defisit - Cadangan Penambahbaikan
+          </p>
+          ${suggestions.join('')}
+        </div>
+      `;
+    }
+
+    // ─── DATA SDK ────────────────────────────────────────────
+    const dataHandler = {
+      onDataChanged(data) {
+        allTransactions = data;
+        updateStats(data);
+        renderTransactions(data);
+        const limitWarning = document.getElementById('limit-warning');
+        if (limitWarning) {
+          if (data.length >= 999) limitWarning.classList.remove('hidden');
+          else limitWarning.classList.add('hidden');
+        }
+      }
+    };
+
+    // ─── ELEMENT SDK ─────────────────────────────────────────
+    const defaultConfig = {
+      app_title: 'Kewangan Peribadi',
+      currency_symbol: 'RM',
+      background_color: '#0f172a',
+      surface_color: 'rgba(255,255,255,0.07)',
+      text_color: '#e2e8f0',
+      accent_color: '#6366f1',
+      font_family: 'Plus Jakarta Sans',
+      font_size: 14
+    };
+
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        const title = config.app_title || defaultConfig.app_title;
+        const currency = config.currency_symbol || defaultConfig.currency_symbol;
+        const font = config.font_family || defaultConfig.font_family;
+        const fontSize = config.font_size || defaultConfig.font_size;
+        const textColor = config.text_color || defaultConfig.text_color;
+        const accentColor = config.accent_color || defaultConfig.accent_color;
+        const bgColor = config.background_color || defaultConfig.background_color;
+
+        currentCurrency = currency;
+
+        const loginTitle = document.getElementById('login-title');
+        const headerTitle = document.getElementById('app-title-header');
+        if (loginTitle) loginTitle.textContent = title;
+        if (headerTitle) headerTitle.textContent = title;
+
+        document.body.style.fontFamily = `${font}, sans-serif`;
+        document.body.style.color = textColor;
+        document.body.style.backgroundColor = bgColor;
+
+        // Apply font size scaling
+        document.querySelectorAll('h1').forEach(el => el.style.fontSize = `${fontSize * 1.6}px`);
+        document.querySelectorAll('h2').forEach(el => el.style.fontSize = `${fontSize * 1.15}px`);
+        document.querySelectorAll('p, label, input, select, textarea, button, span').forEach(el => el.style.fontSize = `${fontSize}px`);
+
+        updateStats(allTransactions);
+        renderTransactions(allTransactions);
+        lucide.createIcons();
+      },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+          },
+          {
+            get: () => config.accent_color || defaultConfig.accent_color,
+            set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['app_title', config.app_title || defaultConfig.app_title],
+        ['currency_symbol', config.currency_symbol || defaultConfig.currency_symbol]
+      ])
+    });
+
+    // ─── INIT ────────────────────────────────────────────────
+    (async () => {
+      // Set today's date
+      const dateInput = document.getElementById('txn-date');
+      if (dateInput) dateInput.valueAsDate = new Date();
+
+      const initResult = await window.dataSdk.init(dataHandler);
+      if (!initResult.isOk) {
+        showToast('Ralat: Gagal memulakan data.', 'error');
+      }
+
+      lucide.createIcons();
+    })();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dbfa078629fa84c',t:'MTc3MzQ1MzAxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
