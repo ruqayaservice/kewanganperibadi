@@ -5,99 +5,125 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Kewangan Peribadi</title>
+<title>Aplikasi Kewangan Peribadi</title>
 
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.4/dist/tailwind.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
 
 <style>
 
 body{
-font-family:sans-serif;
-background:#0f172a;
-color:white;
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#4f46e5,#9333ea);
+min-height:100vh;
 }
 
 .card{
-background:rgba(255,255,255,0.05);
+background:white;
+border-radius:16px;
 padding:20px;
-border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
 </style>
 
 </head>
 
-<body class="p-6">
+<body class="flex items-center justify-center p-6">
 
-<h1 class="text-2xl font-bold mb-4">Kewangan Peribadi (Demo)</h1>
+<div class="max-w-4xl w-full">
+
+<h1 class="text-3xl text-white font-bold mb-6 text-center">
+Aplikasi Kewangan Peribadi
+</h1>
 
 <!-- LOGIN -->
 
-<div id="loginBox" class="card max-w-sm">
+<div id="loginBox" class="card max-w-md mx-auto">
 
-<input id="username" placeholder="username" class="text-black p-2 w-full mb-2">
+<h2 class="text-xl font-semibold mb-4 text-center">
+Log Masuk
+</h2>
 
-<input id="password" type="password" placeholder="password" class="text-black p-2 w-full mb-2">
+<input id="username" placeholder="Username"
+class="border p-3 w-full mb-3 rounded">
 
-<button onclick="login()" class="bg-indigo-500 px-4 py-2 rounded">Log Masuk</button>
+<input id="password" type="password" placeholder="Password"
+class="border p-3 w-full mb-3 rounded">
 
-<p id="loginError" class="text-red-400 mt-2 hidden">Login salah</p>
+<button onclick="login()"
+class="bg-indigo-600 text-white w-full py-3 rounded hover:bg-indigo-700">
+
+Log Masuk
+
+</button>
+
+<p id="loginError" class="text-red-500 mt-3 hidden text-center">
+Login salah
+</p>
 
 </div>
-
 
 <!-- APP -->
 
 <div id="app" class="hidden">
 
-<div class="grid grid-cols-3 gap-4 mb-6">
+<div class="grid md:grid-cols-3 gap-4 mb-6">
 
-<div class="card">
-<p>Baki</p>
-<p id="balance">RM0</p>
+<div class="card text-center">
+<p class="text-gray-500">Baki</p>
+<p id="balance" class="text-2xl font-bold">RM0</p>
 </div>
 
-<div class="card">
-<p>Masuk</p>
-<p id="income">RM0</p>
+<div class="card text-center">
+<p class="text-gray-500">Jumlah Masuk</p>
+<p id="income" class="text-green-600 text-2xl font-bold">RM0</p>
 </div>
 
-<div class="card">
-<p>Keluar</p>
-<p id="expense">RM0</p>
+<div class="card text-center">
+<p class="text-gray-500">Jumlah Keluar</p>
+<p id="expense" class="text-red-600 text-2xl font-bold">RM0</p>
 </div>
 
 </div>
 
-
-<div class="grid grid-cols-2 gap-6">
+<div class="grid md:grid-cols-2 gap-6">
 
 <div class="card">
 
-<h2 class="mb-3">Tambah Transaksi</h2>
+<h2 class="text-lg font-semibold mb-4">
+Tambah Transaksi
+</h2>
 
-<select id="type" class="text-black p-2 w-full mb-2">
+<select id="type" class="border p-2 w-full mb-3 rounded">
 <option value="income">Masuk</option>
 <option value="expense">Keluar</option>
 </select>
 
-<input id="amount" type="number" placeholder="Jumlah" class="text-black p-2 w-full mb-2">
+<input id="amount" type="number" placeholder="Jumlah"
+class="border p-2 w-full mb-3 rounded">
 
-<input id="desc" placeholder="Penerangan" class="text-black p-2 w-full mb-2">
+<input id="desc" placeholder="Penerangan"
+class="border p-2 w-full mb-3 rounded">
 
-<input id="date" type="date" class="text-black p-2 w-full mb-2">
+<input id="date" type="date"
+class="border p-2 w-full mb-3 rounded">
 
-<button onclick="addTxn()" class="bg-green-500 px-4 py-2 rounded">
+<button onclick="addTxn()"
+class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+
 Tambah
+
 </button>
 
 </div>
 
-
-
 <div class="card">
 
-<h2 class="mb-3">Senarai Transaksi</h2>
+<h2 class="text-lg font-semibold mb-4">
+Senarai Transaksi
+</h2>
 
 <div id="list"></div>
 
@@ -107,6 +133,7 @@ Tambah
 
 </div>
 
+</div>
 
 <script>
 
@@ -117,8 +144,8 @@ let transactions=[]
 
 function login(){
 
-const u=document.getElementById("username").value
-const p=document.getElementById("password").value
+let u=document.getElementById("username").value
+let p=document.getElementById("password").value
 
 if(u===USER && p===PASS){
 
@@ -135,10 +162,9 @@ document.getElementById("loginError").classList.remove("hidden")
 
 }
 
-
 function loadData(){
 
-const data=localStorage.getItem("finance_data")
+let data=localStorage.getItem("finance_data")
 
 if(data){
 
@@ -150,30 +176,28 @@ render()
 
 }
 
-
 function saveData(){
 
 localStorage.setItem("finance_data",JSON.stringify(transactions))
 
 }
 
-
 function addTxn(){
 
-const type=document.getElementById("type").value
-const amount=parseFloat(document.getElementById("amount").value)
-const desc=document.getElementById("desc").value
-const date=document.getElementById("date").value
+let type=document.getElementById("type").value
+let amount=parseFloat(document.getElementById("amount").value)
+let desc=document.getElementById("desc").value
+let date=document.getElementById("date").value
 
 if(!amount || !desc){
 
-alert("Isi semua maklumat")
+alert("Sila isi maklumat")
 
 return
 
 }
 
-const txn={
+let txn={
 id:Date.now(),
 type,
 amount,
@@ -189,7 +213,6 @@ render()
 
 }
 
-
 function deleteTxn(id){
 
 transactions=transactions.filter(t=>t.id!==id)
@@ -200,13 +223,12 @@ render()
 
 }
 
-
 function render(){
 
 let income=0
 let expense=0
 
-const list=document.getElementById("list")
+let list=document.getElementById("list")
 
 list.innerHTML=""
 
@@ -215,21 +237,32 @@ transactions.forEach(t=>{
 if(t.type==="income") income+=t.amount
 else expense+=t.amount
 
-const div=document.createElement("div")
+let div=document.createElement("div")
 
-div.className="border-b border-gray-700 p-2"
+div.className="border-b py-2 flex justify-between"
 
 div.innerHTML=`
 
-${t.date} | ${t.desc}
+<div>
 
-<span class="${t.type==='income'?'text-green-400':'text-red-400'}">
+<p>${t.desc}</p>
+<p class="text-sm text-gray-500">${t.date}</p>
+
+</div>
+
+<div>
+
+<span class="${t.type==='income'?'text-green-600':'text-red-600'} font-semibold">
 
 RM ${t.amount}
 
 </span>
 
-<button onclick="deleteTxn(${t.id})" class="ml-2 text-red-400">Padam</button>
+<button onclick="deleteTxn(${t.id})" class="text-red-500 ml-3">
+Padam
+</button>
+
+</div>
 
 `
 
@@ -238,9 +271,7 @@ list.appendChild(div)
 })
 
 document.getElementById("income").innerText="RM "+income.toFixed(2)
-
 document.getElementById("expense").innerText="RM "+expense.toFixed(2)
-
 document.getElementById("balance").innerText="RM "+(income-expense).toFixed(2)
 
 }
